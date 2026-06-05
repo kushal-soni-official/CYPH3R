@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="CYPH3R — Free, open-source multi-model AI chat. Use your own API keys to access GPT-4o, Claude, Gemini, LLaMA, DeepSeek and more.">
+  <meta name="keywords" content="AI chat, open source, multi-model, GPT, Claude, Gemini, LLaMA, free AI">
+  <meta name="author" content="Kushal Soni">
+  <meta name="theme-color" content="#0c0b0e">
+  <meta property="og:title" content="CYPH3R — Open Source Multi-Model AI Chat">
+  <meta property="og:description" content="Free, privacy-first AI chat. Bring your own API keys. 14+ models in one beautiful UI.">
+  <meta property="og:type" content="website">
+  <title>CYPH3R — Multi-Model AI Chat</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Ambient BG -->
+  <div class="ambient-bg">
+    <div class="orb orb-a"></div>
+    <div class="orb orb-b"></div>
+    <div class="noise-layer"></div>
+  </div>
+
+  <div id="app">
+
+    <!-- ═══════ SIDEBAR ═══════ -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="brand">
+          <span class="brand-logo">CYPH3R</span>
+          <span class="brand-tag">v4</span>
+        </div>
+        <button class="mobile-close" id="sidebar-close" aria-label="Close sidebar">✕</button>
+      </div>
+
+      <div class="ws-section">
+        <div class="section-lbl">Workspace</div>
+        <button class="ws-btn ripple-btn" data-ws="general" title="General assistant">
+          <span class="ws-icon">💬</span>
+          <div class="ws-info"><span class="ws-name">General</span><span class="ws-desc">Everyday tasks</span></div>
+        </button>
+        <button class="ws-btn active ripple-btn" data-ws="coding" title="Code & Development">
+          <span class="ws-icon">💻</span>
+          <div class="ws-info"><span class="ws-name">Coding</span><span class="ws-desc">Dev & debugging</span></div>
+        </button>
+        <button class="ws-btn ripple-btn" data-ws="analysis" title="Research & Analysis">
+          <span class="ws-icon">🔬</span>
+          <div class="ws-info"><span class="ws-name">Analysis</span><span class="ws-desc">Research & deep dives</span></div>
+        </button>
+      </div>
+
+      <div class="action-group">
+        <button class="btn-new ripple-btn" id="new-chat-btn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span>New Thread</span>
+        </button>
+      </div>
+
+      <!-- Utility Buttons -->
+      <div class="sidebar-utils">
+        <button class="util-btn ripple-btn" id="export-btn" title="Export all chats as JSON">📥 Export</button>
+        <button class="util-btn danger ripple-btn" id="clear-ws-btn" title="Clear all threads in this workspace">🗑 Clear</button>
+      </div>
+
+      <div class="sidebar-scroll">
+        <div class="section-lbl">History</div>
+        <div id="chat-list"></div>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="footer-row">
+          <span id="provider-status"></span>
+          <div style="display:flex;gap:6px">
+            <button id="settings-btn" class="footer-btn" title="Settings">⚙️</button>
+          </div>
+        </div>
+        <div class="dev-credit">Built by <span class="name">Kushal Soni</span></div>
+      </div>
+    </aside>
+
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- ═══════ MAIN ═══════ -->
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-l">
+          <button class="mobile-toggle" id="sidebar-toggle" aria-label="Menu">☰</button>
+          <div class="ws-indicator">
+            <span class="status-dot"></span>
+            <span id="header-ws-title" class="topbar-title">Coding</span>
+          </div>
+        </div>
+        <div class="topbar-r">
+          <div class="model-wrap" id="model-select-wrap">
+            <select id="model-select" class="model-native" aria-label="Select AI model"></select>
+            <div class="model-display" id="model-display">
+              <span class="ico">🤖</span>
+              <span class="txt">Select Model...</span>
+            </div>
+          </div>
+          <button id="arena-toggle" class="btn-arena ripple-btn" title="Arena — Compare AI models side-by-side">
+            <span>⚡</span> Arena
+          </button>
+        </div>
+      </header>
+
+      <div class="chat-area" id="chat-messages"></div>
+      <div class="arena-panel" id="arena-panel"></div>
+
+      <div class="input-area">
+        <div class="input-status">
+          <span class="status-pill" id="st-autotune">AutoTune: Ready</span>
+          <span class="status-pill on" id="st-stealth" style="display:none;">🔒 Stealth</span>
+          <span class="status-pill" id="st-streaming"></span>
+        </div>
+        <div class="input-box" id="input-wrapper">
+          <textarea id="user-input" placeholder="Ask anything..." rows="1" maxlength="10000" aria-label="Your message"></textarea>
+          <button class="send-btn ripple-btn" id="send-btn" title="Send (Enter)" aria-label="Send">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ═══════ SETTINGS MODAL ═══════ -->
+  <div class="modal-bg" id="settings-modal">
+    <div class="modal-card">
+      <div class="modal-top">
+        <h3>⚙️ Settings</h3>
+        <button class="modal-x" id="settings-close">✕</button>
+      </div>
+      <div class="modal-scroll">
+
+        <div class="s-group">
+          <div class="s-group-title">🎨 Theme</div>
+          <div class="s-group-desc">Choose an accent color to personalize your interface.</div>
+          <div class="theme-picker">
+            <button class="theme-btn active" data-theme="theme-obsidian" style="--t-color:#f0a030" title="Obsidian (Amber)"></button>
+            <button class="theme-btn" data-theme="theme-cobalt" style="--t-color:#3b82f6" title="Cobalt (Blue)"></button>
+            <button class="theme-btn" data-theme="theme-emerald" style="--t-color:#10b981" title="Emerald (Green)"></button>
+            <button class="theme-btn" data-theme="theme-amethyst" style="--t-color:#a855f7" title="Amethyst (Purple)"></button>
+            <button class="theme-btn" data-theme="theme-crimson" style="--t-color:#ef4444" title="Crimson (Red)"></button>
+          </div>
+        </div>
+
+        <div class="s-group">
+          <div class="s-group-title">🔑 API Keys</div>
+          <p class="s-group-desc">Your keys are stored only in your browser. Never sent anywhere except the AI provider.</p>
+
+          <div class="key-row">
+            <label>OpenRouter <span class="badge badge-paid">Recommended</span></label>
+            <div class="key-input-wrap">
+              <input type="password" class="key-input" id="key-openrouter" placeholder="sk-or-..." autocomplete="off">
+              <button class="key-action" id="eye-openrouter" title="Show/hide key">👁</button>
+              <button class="key-action" id="copy-openrouter" title="Copy key">📋</button>
+              <button class="key-action danger" id="del-openrouter" title="Remove key">✕</button>
+            </div>
+          </div>
+
+          <div class="key-row">
+            <label>Groq <span class="badge badge-free">Free</span></label>
+            <div class="key-input-wrap">
+              <input type="password" class="key-input" id="key-groq" placeholder="gsk_..." autocomplete="off">
+              <button class="key-action" id="eye-groq" title="Show/hide key">👁</button>
+              <button class="key-action" id="copy-groq" title="Copy key">📋</button>
+              <button class="key-action danger" id="del-groq" title="Remove key">✕</button>
+            </div>
+          </div>
+
+          <div class="key-row">
+            <label>NVIDIA NIM <span class="badge badge-free">Free</span></label>
+            <div class="key-input-wrap">
+              <input type="password" class="key-input" id="key-nvidia" placeholder="nvapi-..." autocomplete="off">
+              <button class="key-action" id="eye-nvidia" title="Show/hide key">👁</button>
+              <button class="key-action" id="copy-nvidia" title="Copy key">📋</button>
+              <button class="key-action danger" id="del-nvidia" title="Remove key">✕</button>
+            </div>
+          </div>
+
+          <div class="key-row">
+            <label>Google AI <span class="badge badge-free">Free</span></label>
+            <div class="key-input-wrap">
+              <input type="password" class="key-input" id="key-google" placeholder="AIzaSy..." autocomplete="off">
+              <button class="key-action" id="eye-google" title="Show/hide key">👁</button>
+              <button class="key-action" id="copy-google" title="Copy key">📋</button>
+              <button class="key-action danger" id="del-google" title="Remove key">✕</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="s-group">
+          <div class="s-group-title">🎛️ Response Engine</div>
+          <div class="toggle-row"><div><span class="t-label">AutoTune</span><span class="t-sub">Auto-adjusts AI temperature based on query type</span></div><label class="toggle"><input type="checkbox" id="toggle-autotune"><span class="t-track"></span></label></div>
+          <div class="toggle-row"><div><span class="t-label">Stealth Mode</span><span class="t-sub">Obfuscates keywords to bypass content filters</span></div><label class="toggle"><input type="checkbox" id="toggle-stealth"><span class="t-track"></span></label></div>
+        </div>
+
+        <div class="s-group">
+          <div class="s-group-title">✨ Response Cleanup</div>
+          <div class="toggle-row"><div><span class="t-label">Remove Hedging</span><span class="t-sub">Strips "I think", "perhaps", "maybe"</span></div><label class="toggle"><input type="checkbox" id="toggle-stm-hedge"><span class="t-track"></span></label></div>
+          <div class="toggle-row"><div><span class="t-label">Skip Preambles</span><span class="t-sub">Removes "Sure!", "Certainly!" openings</span></div><label class="toggle"><input type="checkbox" id="toggle-stm-direct"><span class="t-track"></span></label></div>
+          <div class="toggle-row"><div><span class="t-label">Casual Tone</span><span class="t-sub">"However" → "But", "Utilize" → "Use"</span></div><label class="toggle"><input type="checkbox" id="toggle-stm-casual"><span class="t-track"></span></label></div>
+        </div>
+
+        <button id="settings-save" class="btn-save ripple-btn">Save Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-box" id="toast-box"></div>
+  <script src="js/app.js"></script>
+</body>
+</html>
